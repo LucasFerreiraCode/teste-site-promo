@@ -27,6 +27,7 @@
             flex-wrap: wrap;
             justify-content: center;
             margin: 20px;
+            gap: 20px;
         }
 
         .produto {
@@ -36,6 +37,7 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             max-width: 250px;
+            text-align: center;
         }
 
         .produto img {
@@ -51,6 +53,16 @@
             margin-top: 10px;
             text-decoration: none;
             border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        @media (max-width: 768px) {
+            .produtos {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
@@ -63,16 +75,39 @@
             <img src="./img/panela.projeto-01.webp" alt="Panela de pressão">
             <h3>Jogo de Panelas Rochedo Limpa Fácil Limited 5 Peças Vermelho</h3>
             <p>De R$199,99 por apenas R$149,99!</p>
-            <a href="#" class="botao">Comprar Agora</a>
+            <button class="botao" onclick="gerarPix(149.99)">Comprar Agora</button>
         </div>
 
         <div class="produto">
             <img src="./img/panela,projeto-02.webp" alt="Jogo de Panelas">
             <h3>Jogo de Panelas Antiaderentes Rochedo Smart Preto com 5 Peças</h3>
             <p>De R$299,99 por apenas R$219,99!</p>
-            <a href="#" class="botao">Comprar Agora</a>
+            <button class="botao" onclick="gerarPix(219.99)">Comprar Agora</button>
         </div>
     </div>
+
+    <script>
+        function gerarPix(valor) {
+            const chavePix = "seu-email@provedor.com"; // Substitua pela sua chave Pix
+            const nomeRecebedor = "Seu Nome"; // Nome do recebedor
+            const cidade = "Sua Cidade"; // Cidade do recebedor
+            const txid = "COMPRA123"; // Identificador da transação
+            
+            // Formato do código Pix copia e cola
+            const pixCopiaCola = `00020126330014BR.GOV.BCB.PIX0114${chavePix}520400005303986540${valor.toFixed(2).replace('.', '')}5802BR5920${nomeRecebedor}6009${cidade}62070503${txid}6304`;
+            
+            // Criar um popup personalizado
+            const mensagem = `Código Pix gerado!\n\nChave Pix: ${chavePix}\nValor: R$ ${valor.toFixed(2)}\n\nCopie o código Pix e cole no app do banco para concluir a compra.`;
+            alert(mensagem);
+            
+            // Copiar código Pix para área de transferência
+            navigator.clipboard.writeText(pixCopiaCola).then(() => {
+                console.log("Código Pix copiado com sucesso!");
+            }).catch(err => {
+                console.error("Erro ao copiar o Pix: ", err);
+            });
+        }
+    </script>
 </body>
 
 </html>
