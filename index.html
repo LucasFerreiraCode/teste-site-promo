@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Promoção de Panelas</title>
+    <script src="https://sdk.mercadopago.com/js/v2"></script> 
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -69,20 +70,6 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        .formulario input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            transition: opacity 0.5s;
-        }
-
-        .desabilitado {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
         .modal {
             display: none;
             position: fixed;
@@ -104,10 +91,6 @@
             border: none;
             cursor: pointer;
             border-radius: 5px;
-        }
-
-        .modal .qr-code {
-            margin: 10px 0;
         }
 
         @media (max-width: 768px) {
@@ -147,16 +130,15 @@
         <input type="text" id="cidade" placeholder="Cidade">
         <input type="text" id="estado" placeholder="Estado">
         <input type="text" id="complemento" placeholder="Complemento (opcional)">
-        <button class="botao" onclick="salvarEnderecoEgerarPix()">Finalizar Compra</button>
+        <button class="botao" onclick="gerarPagamento()">Finalizar Compra</button>
     </div>
 
-    <div id="modalPix" class="modal">
-        <h3>Pagamento via Pix</h3>
-        <p>Copie o código abaixo e cole no app do banco:</p>
-        <input type="text" id="codigoPix" readonly>
-        <button onclick="copiarCodigoPix()">Copiar Código</button>
+    <div id="modalPagamento" class="modal">
+        <h3>Pagamento</h3>
+        <p>Clique no botão abaixo para pagar:</p>
+        <a id="linkPagamento" class="botao" target="_blank">Pagar Agora</a>
         <p>Ou escaneie o QR Code:</p>
-        <img id="qrCode" class="qr-code" src="" alt="QR Code Pix">
+        <img id="qrCodePagamento" src="" alt="QR Code Pagamento">
         <button onclick="fecharModal()">Fechar</button>
     </div>
 
@@ -168,52 +150,42 @@
             document.getElementById('formulario').style.display = 'block';
         }
 
-        function salvarEnderecoEgerarPix() {
-            alert("Endereço para entrega salvo!");
-            desabilitarCampos();
-            gerarPix();
+        function gerarPagamento() {
+            fetch('https://api.mercadopago.com/checkout/preferences', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer SEU_ACCESS_TOKEN'
+                },
+                body: JSON.stringify({
+                    items: [{
+                        title: "Compra de Panelas",
+                        quantity: 1,
+                        currency_id: "BRL",
+                        unit_price: valorCompra
+                    }],
+                    back_urls: {
+                        success: "https://meusite.com/sucesso",
+                        failure: "https://meusite.com/erro"
+                    },
+                    auto_return: "approved",
+                    payment_methods: {
+                        excluded_payment_types: [],
+                        installments: 1
+                    }
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("linkPagamento").href = data.init_point;
+                document.getElementById("qrCodePagamento").src = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(data.init_point)}`;
+                document.getElementById("modalPagamento").style.display = "block";
+            })
+            .catch(error => console.error("Erro ao gerar pagamento:", error));
         }
 
-        function desabilitarCampos() {
-            document.querySelectorAll(".formulario input").forEach(input => {
-                input.classList.add("desabilitado");
-            });
-        }
-
-        function copiarCodigoPix() {
-            let codigoPix = document.getElementById("codigoPix");
-            codigoPix.select();
-            document.execCommand("copy");
-            alert("Código Pix copiado!");
-        }
-
-        function gerarPix() {
-            const chavePix = "13997630601";
-            const nomeRecebedor = "Lucas Ferreira Silva";
-            const cidadeRecebedor = "Peruíbe";
-            const valorFormatado = valorCompra.toFixed(2).replace('.', '');
-
-            const payload = `00020126330014BR.GOV.BCB.PIX0114${chavePix}520400005303986540${valorFormatado}5802BR5925${nomeRecebedor}6009${cidadeRecebedor}62070503***`;
-
-            const crc16 = calcularCRC16(payload);
-            const pixCopiaCola = `${payload}6304${crc16}`;
-
-            document.getElementById("codigoPix").value = pixCopiaCola;
-            document.getElementById("qrCode").src = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(pixCopiaCola)}`;
-            document.getElementById("modalPix").style.display = "block";
-        }
-
-        function calcularCRC16(payload) {
-            let polinomio = 0x1021;
-            let resultado = 0xFFFF;
-
-            for (let i = 0; i < payload.length; i++) {
-                resultado ^= payload.charCodeAt(i) << 8;
-                for (let j = 0; j < 8; j++) {
-                    resultado = (resultado & 0x8000) ? (resultado << 1) ^ polinomio : resultado << 1;
-                }
-            }
-            return resultado.toString(16).toUpperCase().padStart(4, '0');
+        function fecharModal() {
+            document.getElementById("modalPagamento").style.display = "none";
         }
     </script>
 </body>
