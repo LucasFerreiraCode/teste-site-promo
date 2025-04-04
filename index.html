@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Promoção de Panelas</title>
-    <script src="https://sdk.mercadopago.com/js/v2"></script> 
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -81,6 +80,7 @@
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
             text-align: center;
+            z-index: 1000;
         }
 
         .modal button {
@@ -134,10 +134,8 @@
     </div>
 
     <div id="modalPagamento" class="modal">
-        <h3>Pagamento</h3>
-        <p>Clique no botão abaixo para pagar:</p>
-        <a id="linkPagamento" class="botao" target="_blank">Pagar Agora</a>
-        <p>Ou escaneie o QR Code:</p>
+        <h3>Pagamento via PIX</h3>
+        <p>Escaneie o QR Code abaixo com o app do seu banco ou PicPay:</p>
         <img id="qrCodePagamento" src="" alt="QR Code Pagamento">
         <button onclick="fecharModal()">Fechar</button>
     </div>
@@ -151,37 +149,14 @@
         }
 
         function gerarPagamento() {
-            fetch('https://api.mercadopago.com/checkout/preferences', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer SEU_ACCESS_TOKEN'
-                },
-                body: JSON.stringify({
-                    items: [{
-                        title: "Compra de Panelas",
-                        quantity: 1,
-                        currency_id: "BRL",
-                        unit_price: valorCompra
-                    }],
-                    back_urls: {
-                        success: "https://meusite.com/sucesso",
-                        failure: "https://meusite.com/erro"
-                    },
-                    auto_return: "approved",
-                    payment_methods: {
-                        excluded_payment_types: [],
-                        installments: 1
-                    }
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("linkPagamento").href = data.init_point;
-                document.getElementById("qrCodePagamento").src = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(data.init_point)}`;
-                document.getElementById("modalPagamento").style.display = "block";
-            })
-            .catch(error => console.error("Erro ao gerar pagamento:", error));
+            // Código BR Code PIX fixo fornecido
+            const qrCodePix = `00020126330014br.gov.bcb.pix011139240737839520400005303986540520.005802BR5920LUCAS FERREIRA SILVA6009Sao Paulo62290525REC67EFE5604EC3B76447317963040A80`;
+
+            // Gerar QR Code usando Google Chart
+            const qrCodeURL = `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(qrCodePix)}`;
+
+            document.getElementById("qrCodePagamento").src = qrCodeURL;
+            document.getElementById("modalPagamento").style.display = "block";
         }
 
         function fecharModal() {
